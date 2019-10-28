@@ -1,17 +1,13 @@
 ﻿using blqw.DI;
-using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading;
 
 namespace blqw.Gadgets
 {
     /// <summary>
-    ///
+    /// 对象池
     /// </summary>
     public class ObjectPool<T>
         where T : class
@@ -37,8 +33,14 @@ namespace blqw.Gadgets
             _returns = returns;
         }
 
+        /// <summary>
+        /// 对象池容量
+        /// </summary>
         public virtual int Capacity => _cached.Length;
 
+        /// <summary>
+        /// 从兑换吃中获取对象,如果对象池已空,则动态创建对象
+        /// </summary>
         public virtual IDisposable Get(out T value)
         {
             for (var i = 0; i < _cached.Length; i++)

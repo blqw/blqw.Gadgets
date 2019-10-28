@@ -1,11 +1,4 @@
 ﻿# blqw.Gadgets
 小工具集合
 
-## Demo
-```
-hello world
-```
-
-## 更新说明 
-#### [1.0.0.0] 2018.09.20
-* 
+* 线程池 [ObjectPool](src/blqw.Gadgets/ObjectPool/README.md)
