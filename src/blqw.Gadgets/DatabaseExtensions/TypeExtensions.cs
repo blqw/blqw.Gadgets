@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 
 namespace blqw.Gadgets.DatabaseExtensions
 {
@@ -34,37 +31,6 @@ namespace blqw.Gadgets.DatabaseExtensions
             return Convert.ChangeType(value, type);
         }
 
-        public static T ToEntity<T>(this DataRow row)
-            where T : new()
-        {
-            if (row is null)
-            {
-                return default;
-            }
-
-            var props = typeof(T).GetProperties();
-            var entity = new T();
-
-            foreach (var prop in props)
-            {
-                if (prop.CanWrite && !prop.SetMethod.IsStatic && prop.GetIndexParameters().Length == 0)
-                {
-                    try
-                    {
-                        var value = row[prop.Name].ChangeType(prop.PropertyType);
-                        prop.SetValue(entity, value);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex);
-                    }
-                }
-            }
-            return entity;
-        }
-
-
-
 
         public static T ToEntity<T>(this IDataRecord record)
             where T : new()
@@ -73,11 +39,28 @@ namespace blqw.Gadgets.DatabaseExtensions
             {
                 throw new ArgumentNullException(nameof(record));
             }
-            //var factory = EntityBuilder.Get<T>();
-            //return factory.CreateInstance(record);
-            return default;
+            if (record is IDataReader reader && reader.IsClosed)
+            {
+                throw new ArgumentException("IDataReader已经关闭", nameof(record));
+            }
+            var builder = EntityBuilder.BuildOrGet<T>();
+            return builder.ToSingle(record);
         }
 
+        public static List<T> ToEntities<T>(this IDataReader reader)
+            where T : new()
+        {
+            if (reader is null)
+            {
+                throw new ArgumentNullException(nameof(reader));
+            }
+            if (reader.IsClosed)
+            {
+                throw new ArgumentException("IDataReader已经关闭", nameof(reader));
+            }
+            var builder = EntityBuilder.BuildOrGet<T>();
+            return builder.ToMultiple(reader).ToList();
+        }
 
         public static bool IsAtom(this object value) =>
             value.GetType().IsPrimitive || value is string || value is Guid || value is DateTime || value is TimeSpan;
