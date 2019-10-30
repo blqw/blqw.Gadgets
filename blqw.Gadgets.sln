@@ -17,7 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{56583A79-FE2
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "blqw.Gadgets", "src\blqw.Gadgets\blqw.Gadgets.csproj", "{37FD5830-2CD2-4ED7-BB18-3C51CBCD2050}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Example.DatabaseExtensions", "example\Example.DatabaseExtensions\Example.DatabaseExtensions.csproj", "{A0683B9C-B849-4CF1-A998-9EC87AA95BF1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Example.DatabaseExtensions", "example\Example.DatabaseExtensions\Example.DatabaseExtensions.csproj", "{A0683B9C-B849-4CF1-A998-9EC87AA95BF1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
