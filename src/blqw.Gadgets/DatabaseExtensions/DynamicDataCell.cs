@@ -1,14 +1,21 @@
 ﻿using System;
 using System.Data;
 
+#pragma warning disable CS0660 // 类型定义运算符 == 或运算符 !=，但不重写 Object.Equals(object o)
+#pragma warning disable CS0661 // 类型定义运算符 == 或运算符 !=，但不重写 Object.GetHashCode()
 namespace blqw.Gadgets.DatabaseExtensions
 {
-    public class DynamicDataCell : DynamicAtom
+
+    /// <summary>
+    /// 动态类型: 单元格数据
+    /// </summary>
+    internal class DynamicDataCell : DynamicAtom
     {
         private readonly DataRow _row;
         private readonly DataColumn _column;
 
         public DynamicDataCell(DataRow row, DataColumn column)
+            : base(null)
         {
             _row = row ?? throw new ArgumentNullException(nameof(row));
             _column = column ?? throw new ArgumentNullException(nameof(column));

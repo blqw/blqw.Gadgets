@@ -1,25 +1,47 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Xml.Linq;
 
 namespace blqw.Gadgets.DatabaseExtensions
 {
-    public class EntityBuilder
+    /// <summary>
+    /// 实体类构造器
+    /// </summary>
+    internal static class EntityBuilder
     {
-        private static readonly ConcurrentDictionary<Type, object> _cached = new ConcurrentDictionary<Type, object>();
+        // IEntityBuilder<T> 缓存
+        private static readonly ConcurrentDictionary<Type, IEntityBuilder<object>> _cachedBuilder = new ConcurrentDictionary<Type, IEntityBuilder<object>>();
 
-        public static IEntityBuilder<T> BuildOrGet<T>() => (IEntityBuilder<T>)_cached.GetOrAdd(typeof(T), t => new EntityBuilderImpl<T>());
+        /// <summary>
+        /// 获取指定实体类型的构造器
+        /// </summary>
+        public static IEntityBuilder<T> GetBuilder<T>() => (IEntityBuilder<T>)_cachedBuilder.GetOrAdd(typeof(T), t => (IEntityBuilder<object>)new StandardBuilder<T>());
 
-
-        class EntityBuilderImpl<T> : IEntityBuilder<T>
+        class ConstructorBuilder<T> : IEntityBuilder<T>
         {
-            public EntityBuilderImpl()
+            private readonly Func<IDataRecord, T> _constructor;
+            public ConstructorBuilder(ConstructorInfo constructor)
+            {
+                // TODO: 编译为 Func<IDataRecord, T> _constructor;
+            }
+            public IEnumerable<T> ToMultiple(IDataReader reader)
+            {
+                while (reader.Read())
+                {
+                    yield return _constructor(reader);
+                }
+            }
+
+            public T ToSingle(IDataRecord record) => _constructor(record);
+        }
+
+        class StandardBuilder<T> : IEntityBuilder<T>
+        {
+            public StandardBuilder()
             {
                 _properties = typeof(T).GetProperties()
                     .Where(p => p.CanWrite && p.GetIndexParameters().Length == 0)
@@ -52,6 +74,7 @@ namespace blqw.Gadgets.DatabaseExtensions
                 }
                 return null;
             }
+
             public T ToSingle(IDataRecord record)
             {
                 var entity = Activator.CreateInstance<T>();
@@ -142,11 +165,22 @@ namespace blqw.Gadgets.DatabaseExtensions
             public Action<T> SetNull { get; }
         }
 
+        // Func<IDataRecord, int, T> 缓存
+        private static readonly ConcurrentDictionary<Type, object> _cachedReader = new ConcurrentDictionary<Type, object>();
 
+        /// <summary>
+        /// 读取 <paramref name="record"/> 中指定列的值
+        /// </summary>
+        public static T Read<T>(this IDataRecord record, int columnIndex)
+        {
+            var reader = (Func<IDataRecord, int, T>)_cachedReader.GetOrAdd(typeof(T), t => (Func<IDataRecord, int, T>)DataRecordReader(t).Compile());
+            return reader(record, columnIndex);
+        }
 
         private static LambdaExpression DataRecordReader(Type type)
         {
-            switch (Type.GetTypeCode(Nullable.GetUnderlyingType(type) ?? type))
+            var realType = Nullable.GetUnderlyingType(type) ?? type;
+            switch (Type.GetTypeCode(realType))
             {
                 case TypeCode.Boolean:
                     return CreateDataRecordGetMethod("GetBoolean", type);
@@ -181,7 +215,12 @@ namespace blqw.Gadgets.DatabaseExtensions
                 case TypeCode.UInt32:
                     return CreateDataRecordGetMethod("GetInt64", type);
                 case TypeCode.UInt64:
+                    break;
                 default:
+                    if (realType == typeof(Guid))
+                    {
+                        return CreateDataRecordGetMethod("GetGuid", type);
+                    }
                     break;
             }
 
@@ -190,11 +229,16 @@ namespace blqw.Gadgets.DatabaseExtensions
             var p2 = Expression.Parameter(typeof(int));
             var call = Expression.Call(p1, getValue, p2);
             var changeType = typeof(Convert).GetMethod("ChangeType", new[] { typeof(object), typeof(Type) });
-            call = Expression.Call(changeType, call, Expression.Constant(type));
-            var ret = Expression.Convert(call, typeof(object));
+            Expression ret = Expression.Call(changeType, call, Expression.Constant(realType));
+            if (realType != type)
+            {
+                ret = Expression.Convert(call, type);
+            }
             return Expression.Lambda(ret, p1, p2);
         }
+
         private static Type[] _argsTypesInt = { typeof(int) };
+
         private static LambdaExpression CreateDataRecordGetMethod(string methodName, Type returnType)
         {
             var method = typeof(IDataRecord).GetMethod(methodName, _argsTypesInt);
@@ -207,5 +251,6 @@ namespace blqw.Gadgets.DatabaseExtensions
             }
             return Expression.Lambda(ret, p1, p2);
         }
+
     }
 }

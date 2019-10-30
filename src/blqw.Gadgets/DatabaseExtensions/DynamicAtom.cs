@@ -6,8 +6,11 @@ using System.Linq.Expressions;
 
 namespace blqw.Gadgets.DatabaseExtensions
 {
+    /// <summary>
+    /// 动态类型: 原子值
+    /// </summary>
     [DebuggerDisplay("{Value.GetType().Name} : {Value}")]
-    public class DynamicAtom : DynamicObject, IConvertible
+    internal class DynamicAtom : DynamicObject, IConvertible
     {
         public static readonly DynamicAtom NULL = new DynamicAtom(null);
         public static readonly DynamicAtom EMPTY = new DynamicAtom("");
@@ -25,8 +28,6 @@ namespace blqw.Gadgets.DatabaseExtensions
 
         private readonly object _value;
         public DynamicAtom(object atom) => _value = atom;
-
-        protected DynamicAtom() { }
 
         static Func<object, object, object> CreateBinaryOperation((ExpressionType expressionsType, Type type) arg)
         {
@@ -104,11 +105,11 @@ namespace blqw.Gadgets.DatabaseExtensions
         {
             obj = obj is DynamicAtom atom ? atom.Value : obj;
             var value = Value;
-            if (value is null || value is DBNull)
+            if (value.IsNull())
             {
-                return obj is null || obj is DBNull;
+                return obj.IsNull();
             }
-            if (obj is null || obj is DBNull)
+            if (obj.IsNull())
             {
                 return false;
             }

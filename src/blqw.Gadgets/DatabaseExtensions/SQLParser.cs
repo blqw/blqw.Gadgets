@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -10,11 +9,14 @@ namespace blqw.Gadgets.DatabaseExtensions
     /// <summary>
     /// SQL解析
     /// </summary>
-    public static class SQLParser
+    internal static class SQLParser
     {
         // 用于分析占位符正则表达式
         private static readonly Regex _regex = new Regex(@"(?<!\{)\{(?<n>\d+)(?<x>[^}]*)\}", RegexOptions.Compiled);
-
+        private static readonly ObjectPool<StringBuilder> _stringBuilderPool = new ObjectPool<StringBuilder>(64);
+        /// <summary>
+        /// 将 <paramref name="sql"/> 转换为 sql语句和参数
+        /// </summary>
         public static (string sql, object[] arguments) Parse(FormattableString sql)
         {
             var format = sql?.Format;
@@ -29,40 +31,42 @@ namespace blqw.Gadgets.DatabaseExtensions
                 return (format, arguments);
             }
             var index = arguments.Length;
-            var buffer = new StringBuilder();
             Array.Resize(ref arguments, length);
-            format = _regex.Replace(format, m =>
+            using (_stringBuilderPool.Get(out var buffer))
             {
-                var n = int.Parse(m.Groups["n"].Value);
-                var v = arguments[n];
-                if (v is IEnumerable e && !(v is string))
+                format = _regex.Replace(format, m =>
                 {
-                    var r = e.GetEnumerator();
-                    buffer.Append(m.Value); // {0}
-                    if (r.MoveNext())
+                    var n = int.Parse(m.Groups["n"].Value);
+                    var v = arguments[n];
+                    if (v is IEnumerable e && !(v is string))
                     {
-                        arguments[n] = r.Current;
-                        while (r.MoveNext())
+                        var r = e.GetEnumerator();
+                        buffer.Append(m.Value); // {0}
+                        if (r.MoveNext())
                         {
-                            buffer.Append(",{");
-                            buffer.Append(index);
-                            buffer.Append(m.Groups["x"].Value);
-                            buffer.Append('}');
-                            arguments[index] = r.Current;
-                            index++;
+                            arguments[n] = r.Current;
+                            while (r.MoveNext())
+                            {
+                                buffer.Append(",{");
+                                buffer.Append(index);
+                                buffer.Append(m.Groups["x"].Value);
+                                buffer.Append('}');
+                                arguments[index] = r.Current;
+                                index++;
+                            }
                         }
-                    }
-                    else
-                    {
-                        arguments[n] = DBNull.Value;
-                    }
-                    var b = buffer.ToString();
-                    buffer.Clear();
-                    return b;
+                        else
+                        {
+                            arguments[n] = DBNull.Value;
+                        }
+                        var b = buffer.ToString();
+                        buffer.Clear();
+                        return b;
 
-                }
-                return m.Value;
-            });
+                    }
+                    return m.Value;
+                });
+            }
 
             return (format, arguments);
         }

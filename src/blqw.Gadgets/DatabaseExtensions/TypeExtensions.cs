@@ -5,22 +5,22 @@ using System.Linq;
 
 namespace blqw.Gadgets.DatabaseExtensions
 {
+    /// <summary>
+    /// 关于 <see cref="Type"/> 的扩展方法
+    /// </summary>
     internal static class TypeExtensions
     {
-        public static bool IsNull(this object obj) => obj is null || obj is DBNull;
+        /// <summary>
+        /// 判断<paramref name="value"/>是否为<see cref="null"/>或<see cref="DBNull"/>
+        /// </summary>
+        public static bool IsNull(this object value) => value is null || value is DBNull;
 
-        public static T ChangeType<T>(this object value, T defaultValue)
-        {
-            if (value is null || value is DBNull)
-            {
-                return defaultValue;
-            }
-            return (T)Convert.ChangeType(value, typeof(T));
-        }
-
+        /// <summary>
+        /// 类型转换
+        /// </summary>
         public static object ChangeType(this object value, Type type)
         {
-            if (value is null || value is DBNull)
+            if (value.IsNull())
             {
                 return Convert.ChangeType(null, type);
             }
@@ -31,45 +31,24 @@ namespace blqw.Gadgets.DatabaseExtensions
             return Convert.ChangeType(value, type);
         }
 
-
-        public static T ToEntity<T>(this IDataRecord record)
-            where T : new()
-        {
-            if (record is null)
-            {
-                throw new ArgumentNullException(nameof(record));
-            }
-            if (record is IDataReader reader && reader.IsClosed)
-            {
-                throw new ArgumentException("IDataReader已经关闭", nameof(record));
-            }
-            var builder = EntityBuilder.BuildOrGet<T>();
-            return builder.ToSingle(record);
-        }
-
-        public static List<T> ToEntities<T>(this IDataReader reader)
-            where T : new()
-        {
-            if (reader is null)
-            {
-                throw new ArgumentNullException(nameof(reader));
-            }
-            if (reader.IsClosed)
-            {
-                throw new ArgumentException("IDataReader已经关闭", nameof(reader));
-            }
-            var builder = EntityBuilder.BuildOrGet<T>();
-            return builder.ToMultiple(reader).ToList();
-        }
-
+        /// <summary>
+        /// 判断<paramref name="value"/>是否为原子类型
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static bool IsAtom(this object value) =>
             value.GetType().IsPrimitive || value is string || value is Guid || value is DateTime || value is TimeSpan;
 
+        /// <summary>
+        /// 获取 <paramref name="value"/> 对应的数据库可用的类型值
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public static object GetDbObject(this object value)
         {
-            if (value is null || value is DBNull)
+            if (value.IsNull())
             {
-                return null;
+                return DBNull.Value;
             }
             if (value.IsAtom())
             {
