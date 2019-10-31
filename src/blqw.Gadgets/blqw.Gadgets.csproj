@@ -2,10 +2,31 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Version>1.0.0.1</Version>
+    <PackageProjectUrl>https://github.com/blqw/blqw.gadgets</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/blqw/blqw.gadgets</RepositoryUrl>
+    <PackageIconUrl>https://avatars3.githubusercontent.com/u/9656154</PackageIconUrl>
+    <Authors>blqw</Authors>
+    <PackageTags>blqw Gadgets ObjectPool Database</PackageTags>
+    <PackageReleaseNotes>v1.0.0.1(2019.10.31)
+•新增 数据操作扩展类(测试版) 
+
+v1.0.0
+•初始版本
+•新增 对象池</PackageReleaseNotes>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="blqw.DI.ExtensionMethods" Version="1.0.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>

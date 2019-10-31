@@ -19,7 +19,7 @@ namespace blqw.Gadgets.DatabaseExtensions
 
         public void Dispose()
         {
-            if (_reader.NextResult())
+            if (_reader.Read() || _reader.NextResult())
             {
                 // 如果datareader未读完直接dispose,将会自动读取剩下的数据后才释放
                 _command?.Cancel();

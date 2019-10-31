@@ -134,6 +134,8 @@ namespace blqw.Gadgets.DatabaseExtensions
         public static bool operator !=(DynamicAtom a, object b) => !(a?.Equals(b) ?? b == null);
         #endregion
 
+        public override string ToString() => Value?.ToString() ?? "";
+
         TypeCode IConvertible.GetTypeCode() => Value.IsNull() ? TypeCode.DBNull : Type.GetTypeCode(Value.GetType());
         bool IConvertible.ToBoolean(IFormatProvider provider) => Convert.ToBoolean(Value, provider);
         byte IConvertible.ToByte(IFormatProvider provider) => Convert.ToByte(Value, provider);

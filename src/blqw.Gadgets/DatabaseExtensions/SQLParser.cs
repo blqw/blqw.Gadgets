@@ -19,11 +19,11 @@ namespace blqw.Gadgets.DatabaseExtensions
         /// </summary>
         public static (string sql, object[] arguments) Parse(FormattableString sql)
         {
-            var format = sql?.Format;
+            var format = sql?.Format?.Trim();
             var arguments = sql?.GetArguments() ?? Array.Empty<object>();
-            if (string.IsNullOrWhiteSpace(format) || arguments.Length == 0)
+            if (string.IsNullOrEmpty(format) || arguments.Length == 0)
             {
-                return ("", arguments);
+                return (format, arguments);
             }
             var length = arguments.Sum(x => x is IEnumerable e && !(x is string) ? e.Cast<object>().Count() : 1);
             if (length == arguments.Length)
@@ -34,6 +34,7 @@ namespace blqw.Gadgets.DatabaseExtensions
             Array.Resize(ref arguments, length);
             using (_stringBuilderPool.Get(out var buffer))
             {
+                //var buffer = new StringBuilder(); // 无ObjectPool时使用该行代码
                 format = _regex.Replace(format, m =>
                 {
                     var n = int.Parse(m.Groups["n"].Value);

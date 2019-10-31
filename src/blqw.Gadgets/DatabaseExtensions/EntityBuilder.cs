@@ -19,14 +19,36 @@ namespace blqw.Gadgets.DatabaseExtensions
         /// <summary>
         /// 获取指定实体类型的构造器
         /// </summary>
-        public static IEntityBuilder<T> GetBuilder<T>() => (IEntityBuilder<T>)_cachedBuilder.GetOrAdd(typeof(T), t => (IEntityBuilder<object>)new StandardBuilder<T>());
+        public static IEntityBuilder<T> GetBuilder<T>() => (IEntityBuilder<T>)_cachedBuilder.GetOrAdd(typeof(T), t => CreateBuilder<T>());
+
+
+        private static IEntityBuilder<object> CreateBuilder<T>()
+        {
+            var ctor = typeof(T).GetConstructor(FixedValue.TypesIDataRecord);
+            if (ctor != null)
+            {
+                return (IEntityBuilder<object>)new ConstructorBuilder<T>(ctor);
+            }
+            foreach (var c in typeof(T).GetConstructors())
+            {
+                var p = c.GetParameters();
+                if (p.Length == 1 && typeof(IDataRecord).IsAssignableFrom(p[0].ParameterType))
+                {
+                    return (IEntityBuilder<object>)new ConstructorBuilder<T>(c);
+                }
+            }
+            return (IEntityBuilder<object>)new StandardBuilder<T>();
+        }
 
         class ConstructorBuilder<T> : IEntityBuilder<T>
         {
             private readonly Func<IDataRecord, T> _constructor;
             public ConstructorBuilder(ConstructorInfo constructor)
             {
-                // TODO: 编译为 Func<IDataRecord, T> _constructor;
+                var p1 = Expression.Parameter(typeof(IDataRecord));
+                var @new = Expression.New(constructor, p1);
+                var lambda = Expression.Lambda(@new, p1);
+                _constructor = (Func<IDataRecord, T>)lambda.Compile();
             }
             public IEnumerable<T> ToMultiple(IDataReader reader)
             {
@@ -99,6 +121,10 @@ namespace blqw.Gadgets.DatabaseExtensions
 
             public IEnumerable<T> ToMultiple(IDataReader reader)
             {
+                if (!reader.Read())
+                {
+
+                }
                 var props = new List<(int, Property<T>)>();
                 for (var i = reader.FieldCount - 1; i >= 0; i--)
                 {
@@ -110,7 +136,7 @@ namespace blqw.Gadgets.DatabaseExtensions
                     }
                 }
                 var propCount = props.Count;
-                while (reader.Read())
+                do
                 {
                     var entity = Activator.CreateInstance<T>();
                     for (var j = 0; j < propCount; j++)
@@ -126,7 +152,7 @@ namespace blqw.Gadgets.DatabaseExtensions
                         }
                     }
                     yield return entity;
-                }
+                } while (reader.Read());
             }
         }
 
@@ -224,11 +250,11 @@ namespace blqw.Gadgets.DatabaseExtensions
                     break;
             }
 
-            var getValue = typeof(IDataRecord).GetMethod("GetValue", _argsTypesInt);
+            var getValue = typeof(IDataRecord).GetMethod("GetValue", FixedValue.TypesInt32);
             var p1 = Expression.Parameter(typeof(IDataRecord));
             var p2 = Expression.Parameter(typeof(int));
             var call = Expression.Call(p1, getValue, p2);
-            var changeType = typeof(Convert).GetMethod("ChangeType", new[] { typeof(object), typeof(Type) });
+            var changeType = typeof(Convert).GetMethod("ChangeType", FixedValue.TypesObjectType);
             Expression ret = Expression.Call(changeType, call, Expression.Constant(realType));
             if (realType != type)
             {
@@ -241,7 +267,7 @@ namespace blqw.Gadgets.DatabaseExtensions
 
         private static LambdaExpression CreateDataRecordGetMethod(string methodName, Type returnType)
         {
-            var method = typeof(IDataRecord).GetMethod(methodName, _argsTypesInt);
+            var method = typeof(IDataRecord).GetMethod(methodName, FixedValue.TypesInt32);
             var p1 = Expression.Parameter(typeof(IDataRecord));
             var p2 = Expression.Parameter(typeof(int));
             Expression ret = Expression.Call(p1, method, p2);

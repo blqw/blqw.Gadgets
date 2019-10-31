@@ -250,7 +250,10 @@ namespace blqw.Gadgets
             using (new SelfClosingDbCommand(command))
             {
                 var reader = command.ExecuteReader();
-                return func(reader);
+                using (new SelfClosingDataReader(reader, command))
+                {
+                    return func(reader);
+                }
             }
         }
 
@@ -290,7 +293,7 @@ namespace blqw.Gadgets
         public static List<dynamic> ExecuteList(this IDbConnection conn, FormattableString sql, int limit = DEFAULT_LIMIT) => conn.ExecuteReader(sql, reader =>
         {
             var fieldCount = reader.FieldCount;
-            var mapping = new Dictionary<string, int>(fieldCount);
+            var mapping = new Dictionary<string, int>(fieldCount, StringComparer.OrdinalIgnoreCase);
             for (var i = 0; i < fieldCount; i++)
             {
                 mapping.Add(reader.GetName(i), i);
@@ -322,7 +325,7 @@ namespace blqw.Gadgets
             if (reader.Read())
             {
                 var fieldCount = reader.FieldCount;
-                var mapping = new Dictionary<string, int>(fieldCount);
+                var mapping = new Dictionary<string, int>(fieldCount, StringComparer.OrdinalIgnoreCase);
                 for (var i = 0; i < fieldCount; i++)
                 {
                     mapping.Add(reader.GetName(i), i);

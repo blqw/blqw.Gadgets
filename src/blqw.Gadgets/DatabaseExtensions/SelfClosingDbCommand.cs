@@ -25,7 +25,7 @@ namespace blqw.Gadgets.DatabaseExtensions
         {
             _command?.Dispose();
             _command = null;
-            _connection?.Dispose();
+            _connection?.SafeClose();
             _connection = null;
         }
     }
