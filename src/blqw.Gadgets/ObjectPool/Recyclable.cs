@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 
 namespace blqw.Gadgets
@@ -8,16 +6,16 @@ namespace blqw.Gadgets
     /// <summary>
     /// 可回收的对象
     /// </summary>
-    class Recyclable<T> : IDisposable
+    internal class Recyclable<T> : IDisposable
         where T : class
     {
         private T _value;
-        private readonly Action<T> _returning;
+        private readonly Action<T> _returnback;
 
-        public Recyclable(T value, Action<T> returning)
+        public Recyclable(T value, Action<T> returnback)
         {
             _value = value;
-            _returning = returning ?? throw new ArgumentNullException(nameof(returning));
+            _returnback = returnback ?? throw new ArgumentNullException(nameof(returnback));
         }
         /// <summary>
         /// 回收对象
@@ -27,7 +25,7 @@ namespace blqw.Gadgets
             var value = Interlocked.Exchange(ref _value, null);
             if (value != null)
             {
-                _returning(value);
+                _returnback(value);
             }
         }
         // 析构函数

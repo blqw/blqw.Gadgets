@@ -1,22 +1,21 @@
 ﻿using blqw.Gadgets;
-using blqw.Gadgets.DatabaseExtensions;
 using MySql.Data.MySqlClient;
 using System;
-using System.ComponentModel;
-using System.Data;
-using System.Data.Common;
-using System.Data.SqlClient;
-using System.Dynamic;
-using System.Linq;
 //using blqw.Gadgets;
 
 namespace Example.DatabaseExtensions
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-           
+            var str = "12345";
+            Console.WriteLine(str + "\b\b12");
+
+            using (var conn = new MySqlConnection($"Server=192.168.1.111;Port=3306;Database=fuxiao_xinzhu;Uid={Environment.GetEnvironmentVariable("mysql_user")};Pwd={Environment.GetEnvironmentVariable("mysql_pwd")};"))
+            {
+                var wechat = conn.ExecuteFirst($"select * from wechats where OPEN_ID in ({new byte[0]:qwert,1234}) limit 1");
+            }
 
 
 

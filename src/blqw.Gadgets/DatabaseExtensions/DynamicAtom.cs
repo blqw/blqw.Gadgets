@@ -29,7 +29,7 @@ namespace blqw.Gadgets.DatabaseExtensions
         private readonly object _value;
         public DynamicAtom(object atom) => _value = atom;
 
-        static Func<object, object, object> CreateBinaryOperation((ExpressionType expressionsType, Type type) arg)
+        private static Func<object, object, object> CreateBinaryOperation((ExpressionType expressionsType, Type type) arg)
         {
             var p1 = Expression.Parameter(typeof(object));
             var p2 = Expression.Parameter(typeof(object));
@@ -41,7 +41,7 @@ namespace blqw.Gadgets.DatabaseExtensions
 
         }
 
-        static Func<object, object> CreateUnaryOperation((ExpressionType expressionsType, Type type) arg)
+        private static Func<object, object> CreateUnaryOperation((ExpressionType expressionsType, Type type) arg)
         {
             var p1 = Expression.Parameter(typeof(object));
             var arg1 = Expression.Convert(p1, arg.type);

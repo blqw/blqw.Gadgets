@@ -90,9 +90,20 @@ namespace blqw.Gadgets
         }
 
         // 获取转换参数占位符的委托方法
-        private static Func<string, string> GetParameterPlaceholderHandler(this IDbConnection conn) =>
+        internal static Func<string, string> GetParameterPlaceholderHandler(this IDbConnection conn) =>
             _argsPlaceholderHandlers.TryGetValue(conn.GetType().Name, out var handler)
                 ? handler : _argsPlaceholderHandlers["default"] ?? (x => x);
+
+        private static readonly ObjectPool<DbParameterFormatProvider> _pool = new ObjectPool<DbParameterFormatProvider>(
+            null,
+            p => new DbParameterFormatProvider(),
+            x =>
+            {
+                x.ClearCommand();
+                return true;
+            },
+            64
+        );
 
         /// <summary>
         /// 使用 sql语句(<paramref name="fsql"/>) 创建数据库执行命令(<see cref="IDbCommand"/>)
@@ -111,29 +122,14 @@ namespace blqw.Gadgets
             {
                 throw new ArgumentNullException(nameof(fsql));
             }
-            var (sql, arguments) = SQLParser.Parse(fsql);
+            //var (sql, arguments) = SQLParser.Parse(fsql);
             var cmd = conn.CreateCommand();
             cmd.CommandType = CommandType.Text;
-            if (arguments.Length == 0)
+            using (_pool.Get(out var formatProvider))
             {
-                cmd.CommandText = sql;
-                return cmd;
+                formatProvider.SetCommand(cmd);
+                cmd.CommandText = fsql.ToString(formatProvider);
             }
-
-            var placeholder = conn.GetParameterPlaceholderHandler();
-            var placeholders = new object[arguments.Length];
-            for (var i = 0; i < arguments.Length; i++)
-            {
-                var p = cmd.AddParameter(arguments[i]);
-
-                if (string.IsNullOrEmpty(p.ParameterName))
-                {
-                    p.ParameterName = "p" + i.ToString();
-                }
-                placeholders[i] = placeholder(p.ParameterName);
-            }
-
-            cmd.CommandText = string.Format(sql, placeholders);
             return cmd;
         }
 
@@ -226,6 +222,35 @@ namespace blqw.Gadgets
                 var result = func();
                 tran.Commit();
                 return result;
+            }
+        }
+
+
+        public static void ExecuteReader(this IDbConnection conn, FormattableString sql, Action<IDataReader> func)
+        {
+            if (conn is null)
+            {
+                throw new ArgumentNullException(nameof(conn));
+            }
+
+            if (sql is null)
+            {
+                throw new ArgumentNullException(nameof(sql));
+            }
+
+            if (func is null)
+            {
+                throw new ArgumentNullException(nameof(func));
+            }
+
+            var command = conn.CreateCommand(sql);
+            using (new SelfClosingDbCommand(command))
+            {
+                var reader = command.ExecuteReader();
+                using (new SelfClosingDataReader(reader, command))
+                {
+                    func(reader);
+                }
             }
         }
 

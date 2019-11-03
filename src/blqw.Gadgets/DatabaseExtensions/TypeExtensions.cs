@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
 
 namespace blqw.Gadgets.DatabaseExtensions
 {
@@ -37,7 +34,7 @@ namespace blqw.Gadgets.DatabaseExtensions
         /// <param name="value"></param>
         /// <returns></returns>
         public static bool IsAtom(this object value) =>
-            value.GetType().IsPrimitive || value is string || value is Guid || value is DateTime || value is TimeSpan;
+            value.GetType().IsPrimitive || value is byte[] || value is string || value is Guid || value is DateTime || value is TimeSpan;
 
         /// <summary>
         /// 获取 <paramref name="value"/> 对应的数据库可用的类型值

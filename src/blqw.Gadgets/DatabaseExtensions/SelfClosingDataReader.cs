@@ -9,7 +9,7 @@ namespace blqw.Gadgets.DatabaseExtensions
     internal struct SelfClosingDataReader : IDisposable
     {
         private IDataReader _reader;
-        private IDbCommand _command;
+        private readonly IDbCommand _command;
 
         public SelfClosingDataReader(IDataReader reader, IDbCommand command)
         {

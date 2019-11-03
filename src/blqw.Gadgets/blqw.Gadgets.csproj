@@ -1,9 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>1.0.0.1</Version>
+    <Version>1.0.0.7</Version>
     <PackageProjectUrl>https://github.com/blqw/blqw.gadgets</PackageProjectUrl>
     <RepositoryUrl>https://github.com/blqw/blqw.gadgets</RepositoryUrl>
     <PackageIconUrl>https://avatars3.githubusercontent.com/u/9656154</PackageIconUrl>
@@ -16,6 +16,7 @@ v1.0.0
 •初始版本
 •新增 对象池</PackageReleaseNotes>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Description>一堆小工具</Description>
   </PropertyGroup>
 
   <ItemGroup>

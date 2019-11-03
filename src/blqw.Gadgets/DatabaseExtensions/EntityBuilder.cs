@@ -40,7 +40,7 @@ namespace blqw.Gadgets.DatabaseExtensions
             return (IEntityBuilder<object>)new StandardBuilder<T>();
         }
 
-        class ConstructorBuilder<T> : IEntityBuilder<T>
+        private class ConstructorBuilder<T> : IEntityBuilder<T>
         {
             private readonly Func<IDataRecord, T> _constructor;
             public ConstructorBuilder(ConstructorInfo constructor)
@@ -61,7 +61,7 @@ namespace blqw.Gadgets.DatabaseExtensions
             public T ToSingle(IDataRecord record) => _constructor(record);
         }
 
-        class StandardBuilder<T> : IEntityBuilder<T>
+        private class StandardBuilder<T> : IEntityBuilder<T>
         {
             public StandardBuilder()
             {
@@ -123,7 +123,7 @@ namespace blqw.Gadgets.DatabaseExtensions
             {
                 if (!reader.Read())
                 {
-
+                    yield break;
                 }
                 var props = new List<(int, Property<T>)>();
                 for (var i = reader.FieldCount - 1; i >= 0; i--)
@@ -156,7 +156,7 @@ namespace blqw.Gadgets.DatabaseExtensions
             }
         }
 
-        class Property<T>
+        private class Property<T>
         {
             private readonly PropertyInfo _property;
 
@@ -263,7 +263,7 @@ namespace blqw.Gadgets.DatabaseExtensions
             return Expression.Lambda(ret, p1, p2);
         }
 
-        private static Type[] _argsTypesInt = { typeof(int) };
+        private static readonly Type[] _argsTypesInt = { typeof(int) };
 
         private static LambdaExpression CreateDataRecordGetMethod(string methodName, Type returnType)
         {
