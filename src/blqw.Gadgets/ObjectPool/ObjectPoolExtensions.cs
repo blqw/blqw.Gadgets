@@ -15,7 +15,7 @@ namespace blqw.Gadgets
             ObjectPool<StringBuilder> CreateStringBuilderPool(IServiceProvider provider)
             {
                 return new ObjectPool<StringBuilder>(provider,
-                    x => new StringBuilder(),
+                    () => new StringBuilder(),
                     x =>
                     {
                         if (x.Capacity >= 4096)
@@ -32,7 +32,7 @@ namespace blqw.Gadgets
         public static IServiceCollection AddObjectPool<T>(this IServiceCollection services, Func<IServiceProvider, T> creator, Func<T, bool> returns, int capacity = 100)
             where T : class
         {
-            services.AddTransient(p => new ObjectPool<T>(p, creator, returns, capacity));
+            services.AddTransient(p => new ObjectPool<T>(p, () => creator(p), returns, capacity));
             return services;
         }
 

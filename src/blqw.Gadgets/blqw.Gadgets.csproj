@@ -20,14 +20,14 @@ v1.0.0
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="blqw.DI.ExtensionMethods" Version="1.0.0.3" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="2.0.0" />
   </ItemGroup>
 
 </Project>

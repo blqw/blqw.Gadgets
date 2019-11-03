@@ -96,7 +96,7 @@ namespace blqw.Gadgets
 
         private static readonly ObjectPool<DbParameterFormatProvider> _pool = new ObjectPool<DbParameterFormatProvider>(
             null,
-            p => new DbParameterFormatProvider(),
+            () => new DbParameterFormatProvider(),
             x =>
             {
                 x.ClearCommand();

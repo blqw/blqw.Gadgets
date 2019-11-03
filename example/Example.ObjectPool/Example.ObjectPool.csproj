@@ -13,4 +13,10 @@
     <ProjectReference Include="..\..\src\blqw.Gadgets\blqw.Gadgets.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="blqw.Gadgets">
+      <HintPath>..\..\src\blqw.Gadgets\bin\Debug\netstandard2.0\blqw.Gadgets.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

@@ -13,8 +13,8 @@ namespace Example.ObjectPool
         {
             var provider = new ServiceCollection()
                                 .AddObjectPool()
-                                .AddObjectPool<List<string>>(
-                                    x=>new List<string>(),
+                                .AddObjectPool(
+                                    x => new List<string>(),
                                     x =>
                                     {
                                         x.Clear();
